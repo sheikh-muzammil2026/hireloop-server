@@ -7,33 +7,8 @@ const { createRemoteJWKSet, jwtVerify } = require('jose-node-cjs-runtime');
 
 dotenv.config()
 
-// test started from here
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://hireloop-client-steel.vercel.app"
-];
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-  })
-);
-
-app.options("*", cors());
-
-app.use(express.json());
-
-// test ended here
-// app.use(cors())
-// app.use(express.json())
+app.use(cors())
+app.use(express.json())
 
 
 const port = process.env.PORT
