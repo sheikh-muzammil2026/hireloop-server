@@ -35,11 +35,11 @@ const client = new MongoClient(uri, {
 const verifyToken = async(req, res , next)=>{
   const authHeader = req?.headers.authorization
   if(!authHeader){
-    return res.status(401).json({message: "Unauthorized"});
+    return res.status(401).json({message: "headers error: Unauthorized"});
   }
   const token = authHeader.split(" ")[1];
   if(!token){
-    return res.status(401).json({message: "Unauthorized"})
+    return res.status(401).json({message: "token in headers error: Unauthorized"})
   }
 try {
    const {payload}  = await jwtVerify(token, JWKS)
@@ -60,6 +60,7 @@ async function run() {
 
     const database = client.db("hireloop");
     const jobsCollection = database.collection("jobs");
+    const companiesCollection = database.collection("companies")
 
     
     app.post('/jobs',verifyToken, async(req, res)=>{
@@ -74,7 +75,7 @@ async function run() {
         }
     })
 
-    app.get('/jobs/:userId',verifyToken, async(req, res)=>{
+    app.get('/jobs/company/:userId',verifyToken, async(req, res)=>{
         const userId = req.params.userId;
         const query = {companyId: userId};
         const cursor  = jobsCollection.find(query);
@@ -82,10 +83,47 @@ async function run() {
         res.json(result);
     })
 
+    app.get("/jobs/:jobId",verifyToken,  async(req, res)=>{
+      const {jobId} = req.params;
+      if (!ObjectId.isValid(jobId)) {
+      return res.status(400).json({ message: "Invalid Job ID format" });
+    }
+      const query = {_id: new ObjectId(jobId)}
+      const result  = await jobsCollection.findOne(query);
+      
+      if (!result) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+        res.json(result); 
+    })
+
+
     app.get("/jobs", async(req, res)=>{
-      const cursor  = jobsCollection.find();
+      const {search, category, type } = req.query;
+      const query = {}
+      if(search && search.trim() !== ''){
+        query.title = {
+          $regex : search.trim(),
+          $options : 'i'
+        }
+
+      }
+
+       if(category && category !== 'All'){
+        query.category = category
+      }
+      if(type && type !=='All'){
+        query.type = type
+      }
+      const cursor  = jobsCollection.find(query);
       const result = await cursor.toArray();
         res.json(result); 
+    })
+
+    app.post('/companies', async(req, res)=>{
+      const registredData = req.body;
+      const result = await companiesCollection.insertOne(registredData)
+      res.json(result)
     })
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
