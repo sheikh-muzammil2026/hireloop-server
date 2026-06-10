@@ -61,6 +61,7 @@ async function run() {
     const database = client.db("hireloop");
     const jobsCollection = database.collection("jobs");
     const companiesCollection = database.collection("companies")
+    const applicationsCollection = database.collection("applications")
 
     
     app.post('/jobs',verifyToken, async(req, res)=>{
@@ -124,6 +125,19 @@ async function run() {
       const registredData = req.body;
       const result = await companiesCollection.insertOne(registredData)
       res.json(result)
+    })
+
+     app.post('/applications', async(req, res)=>{
+
+        try {
+            const newApp = req.body;
+            newApp.appliedAt = new Date();
+            const result = await applicationsCollection.insertOne(newApp);
+            res.json(result)
+            
+        } catch (error) {
+            console.log(error, "Job applicatiion submiting failed")
+        }
     })
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
