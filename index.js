@@ -62,6 +62,7 @@ async function run() {
     const jobsCollection = database.collection("jobs");
     const companiesCollection = database.collection("companies")
     const applicationsCollection = database.collection("applications")
+    const plansCollection = database.collection("plans")
 
     
     app.post('/jobs',verifyToken, async(req, res)=>{
@@ -138,6 +139,30 @@ async function run() {
         } catch (error) {
             console.log(error, "Job applicatiion submiting failed")
         }
+    })
+
+    app.get('/applications', async(req, res)=>{
+      try {
+        const userEmail = req.query.userEmail;
+        const query = {email: userEmail};
+        const cursor = await applicationsCollection.find(query);
+        const result = await cursor.toArray();
+        res.json(result);
+      } catch (error) {
+        console.log(error, "internal server error");
+      }
+    })
+
+    app.get('/plans', async(req, res)=>{
+      const planId = req.query.plan_id;
+      const query = {plan_id: planId}
+      try {
+       const result  = await plansCollection.findOne(query)
+      res.json(result)
+      } catch (error) {
+        console.log("failed upload plans collection",error);
+        
+      }
     })
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
